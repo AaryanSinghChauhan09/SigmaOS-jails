@@ -249,4 +249,33 @@ mod tests {
         // Assert
         assert!(matches!(res, Err(JailError::Duplicate(_))));
     }
+
+    #[test]
+    fn test_remove_while_running_rejected_aaa() {
+        // Arrange
+        let mut reg = JailRegistry::new();
+        reg.register(Jail::new("web", "/var/lib/sigma/jails/web").unwrap())
+            .unwrap();
+        reg.start("web", 4242).unwrap();
+        // Act
+        let res = reg.remove("web");
+        // Assert
+        assert!(matches!(res, Err(JailError::RemoveWhileRunning(ref id)) if id == "web"));
+    }
+
+    #[test]
+    fn test_list_returns_sorted_jails_aaa() {
+        // Arrange
+        let mut reg = JailRegistry::new();
+        reg.register(Jail::new("zebra", "/var/lib/sigma/jails/z").unwrap())
+            .unwrap();
+        reg.register(Jail::new("alpha", "/var/lib/sigma/jails/a").unwrap())
+            .unwrap();
+        reg.register(Jail::new("middle", "/var/lib/sigma/jails/m").unwrap())
+            .unwrap();
+        // Act
+        let ids: Vec<&str> = reg.list().into_iter().map(|j| j.id.as_str()).collect();
+        // Assert
+        assert_eq!(ids, vec!["alpha", "middle", "zebra"]);
+    }
 }
